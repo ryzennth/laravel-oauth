@@ -1,16 +1,32 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
 import NavLink from '@/Components/NavLink.vue';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink.vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import Swal from 'sweetalert2';
 
 const showingNavigationDropdown = ref(false);
 const page = usePage();
-const user = computed(() => page.props.auth?.user || {}); // Aman untuk undefined
+const user = computed(() => page.props.auth?.user || {});
+
+onMounted(() => {
+    const flash = page.props.flash;
+
+    if (flash?.must_complete_profile) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Lengkapi Profil',
+            text: flash.must_complete_profile,
+            confirmButtonText: 'OK',
+        });
+    }
+});
 </script>
+
+
 
 <template>
     <div class="min-h-screen bg-gray-100">
@@ -33,6 +49,8 @@ const user = computed(() => page.props.auth?.user || {}); // Aman untuk undefine
                             </NavLink>
                         </div>
                     </div>
+                   
+
 
                     <!-- Right Side -->
                     <div class="hidden sm:ms-6 sm:flex sm:items-center">

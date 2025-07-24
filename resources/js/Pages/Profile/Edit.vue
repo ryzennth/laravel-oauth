@@ -3,13 +3,59 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
+import { onMounted, watch } from 'vue';
+import Swal from 'sweetalert2';
 
+// Props dari backend
 defineProps({
     mustVerifyEmail: Boolean,
     status: String,
     auth: Object,
 });
+
+// Ambil props flash dari page
+const page = usePage();
+
+// Jalankan popup kalau harus isi password (jika flash sudah tersedia saat mounted)
+onMounted(() => {
+    const flash = page.props.flash;
+
+    if (flash?.mustSetPassword) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Lengkapi Password',
+            text: 'Silakan isi password terlebih dahulu sebelum melanjutkan.',
+            confirmButtonText: 'Isi Sekarang',
+        });
+    } else if (flash?.mustCompleteProfile) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Lengkapi Profil',
+            text: 'Silakan isi username terlebih dahulu sebelum melanjutkan.',
+            confirmButtonText: 'Isi Sekarang',
+        });
+    }
+});
+
+
+// Tambahan: watch agar tetap muncul meskipun flash datang belakangan
+watch(
+    () => page.props.flash?.mustSetPassword,
+    (newVal) => {
+        if (newVal) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Lengkapi Password',
+                text: 'Silakan isi password terlebih dahulu sebelum melanjutkan.',
+                confirmButtonText: 'Isi Sekarang',
+            });
+        }
+    },
+    { immediate: true }
+);
+
+
 </script>
 
 <template>

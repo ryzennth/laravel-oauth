@@ -3,11 +3,12 @@ import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/solid';
 
-// Heroicons
-import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/solid'
+const page = usePage();
+const mustSetPassword = computed(() => page.props.flash?.mustSetPassword === true);
 
 const passwordInput = ref(null);
 const currentPasswordInput = ref(null);
@@ -18,7 +19,6 @@ const form = useForm({
     password_confirmation: '',
 });
 
-// Toggle visibility states
 const showCurrentPassword = ref(false);
 const showNewPassword = ref(false);
 const showConfirmPassword = ref(false);
@@ -32,14 +32,16 @@ const updatePassword = () => {
                 form.reset('password', 'password_confirmation');
                 passwordInput.value.focus();
             }
-            if (form.errors.current_password) {
+            if (!mustSetPassword.value && form.errors.current_password) {
                 form.reset('current_password');
                 currentPasswordInput.value.focus();
             }
         },
     });
 };
+
 </script>
+
 
 <template>
     <section>
@@ -52,7 +54,7 @@ const updatePassword = () => {
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <!-- Current Password -->
-            <div>
+            <div v-if="!mustSetPassword">
                 <InputLabel for="current_password" value="Current Password" />
 
                 <div class="relative">
@@ -99,6 +101,7 @@ const updatePassword = () => {
                         <component :is="showNewPassword ? EyeSlashIcon : EyeIcon" class="h-5 w-5" />
                     </button>
                 </div>
+                <p v-if="passwordError" class="text-red-500 text-sm mt-1">{{ passwordError }}</p>
 
                 <InputError :message="form.errors.password" class="mt-2" />
             </div>

@@ -28,12 +28,22 @@ class HandleInertiaRequests extends Middleware
      * @return array<string, mixed>
      */
     public function share(Request $request): array
-    {
-        return [
-            ...parent::share($request),
-            'auth' => [
-                'user' => $request->user(),
-            ],
-        ];
-    }
+{
+    return [
+        ...parent::share($request),
+        'auth' => [
+            'user' => $request->user()
+                ? array_merge(
+                    $request->user()->toArray(),
+                    ['has_password' => !empty($request->user()->password)]
+                )
+                : null,
+        ],
+        'flash' => [
+            'mustSetPassword' => fn () => $request->session()->get('mustSetPassword'),
+        ],
+    ];
+}
+
+
 }

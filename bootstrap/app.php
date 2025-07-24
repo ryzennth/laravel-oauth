@@ -11,13 +11,19 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Middleware global
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        // Middleware alias (route middleware)
+        $middleware->alias([
+            'ensure.password' => \App\Http\Middleware\EnsurePasswordIsSet::class,
+            'complete.profile' => \App\Http\Middleware\EnsureProfileIsCompleted::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
-    })->create();
+        // optional exception config
+    })
+    ->create();

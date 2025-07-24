@@ -22,17 +22,42 @@ const form = useForm({
 });
 
 // Realtime warning jika username mengandung spasi
+const usernameError = ref('');
+
+// ✅ Gunakan arrow function agar username bisa di-watch
 watch(() => form.username, (val) => {
-    usernameWarning.value = /\s/.test(val)
-        ? 'Username tidak boleh mengandung spasi.'
-        : '';
+    if (val && !/^[a-z0-9]+$/.test(val)) {
+        usernameError.value = 'Username hanya boleh huruf kecil dan angka tanpa spasi atau simbol.';
+    } else {
+        usernameError.value = '';
+    }
 });
+const passwordError = ref('');
+
+watch(() => form.password, (val) => {
+    const rules = [
+        { check: val.length >= 8, message: 'minimal 8 karakter' },
+        { check: /[a-z]/.test(val), message: 'huruf kecil' },
+        { check: /[A-Z]/.test(val), message: 'huruf besar' },
+        { check: /[0-9]/.test(val), message: 'angka' },
+    ];
+
+    const failed = rules.filter(rule => !rule.check);
+    if (val && failed.length > 0) {
+        passwordError.value = 'Password harus mengandung: ' + failed.map(r => r.message).join(', ');
+    } else {
+        passwordError.value = '';
+    }
+});
+
 
 const submit = () => {
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
 };
+
+
 </script>
 
 <template>
@@ -67,9 +92,7 @@ const submit = () => {
                     autocomplete="username"
                 />
                 <!-- Warning jika ada spasi -->
-                <p v-if="usernameWarning" class="text-sm text-red-600 mt-1">
-                    {{ usernameWarning }}
-                </p>
+                <p v-if="usernameError" class="text-red-500 text-sm mt-1">{{ usernameError }}</p>
                 <InputError class="mt-2" :message="form.errors.username" />
             </div>
 
@@ -99,6 +122,7 @@ const submit = () => {
                         required
                         autocomplete="new-password"
                     />
+                    
                     <button
                         type="button"
                         class="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500 focus:outline-none"
@@ -110,6 +134,7 @@ const submit = () => {
                         />
                     </button>
                 </div>
+                <p v-if="passwordError" class="text-red-500 text-sm mt-1">{{ passwordError }}</p>
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 

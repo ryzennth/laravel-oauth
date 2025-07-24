@@ -11,7 +11,6 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\SetPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use PhpParser\Node\NullableType;
 
 Route::get('/', fn () => redirect('/login'));
 
@@ -32,14 +31,13 @@ Route::get('/auth/google/callback', function () {
             'email' => $googleUser->getEmail(),
             'username' => Str::slug($googleUser->getName()) . rand(100, 999),
             'email_verified_at' => now(),
-            'password' => null, 
+            'password' => null,
         ]);
 
         Auth::login($user);
-        return redirect()->route('password.set'); // redirect ke set password
+        return redirect()->route('profile.edit');
     }
 
-    // Jika user sudah ada tapi belum ada google_id
     if (! $user->google_id) {
         $user->google_id = $googleUser->getId();
     }
@@ -52,39 +50,38 @@ Route::get('/auth/google/callback', function () {
 
     Auth::login($user);
 
-    // Kalau password belum diset, paksa ke /set-password
+    // Redirect ke profile kalau password belum di-set
     if (is_null($user->password)) {
-        return redirect()->route('password.set');
+        return redirect()->route('profile.edit');
     }
 
     return redirect()->intended('/dashboard');
 });
 
 // ------------------------
-// Dashboard
+// Routes yang memerlukan password (terkunci jika belum set)
 // ------------------------
-Route::get('/dashboard', function () {
-    $user = auth()->user();
+Route::middleware(['auth', 'verified', 'ensure.password'])->group(function () {
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard');
+    })->name('dashboard');
 
-    // Jika password belum di-set (masih null / kosong)
-    if (empty($user->getAuthPassword()) || is_null($user->password)) {
-        return redirect()->route('password.set');
-    }
-
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    Route::middleware(['auth', 'complete.profile'])->group(function () {
+    Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+});
 
 
-// ------------------------
-// Profile
-// ------------------------
-Route::middleware('auth')->group(function () {
+    // Profile (edit/update/hapus)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo.update');
+});
 
-    // Set Password
+// ------------------------
+// Route yang dibuka untuk user TANPA password
+// ------------------------
+Route::middleware(['auth'])->group(function () {
     Route::get('/set-password', [SetPasswordController::class, 'create'])->name('password.set');
     Route::post('/set-password', [SetPasswordController::class, 'store'])->name('password.set.store');
 });

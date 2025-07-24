@@ -1,11 +1,11 @@
 <script setup>
-import { ref } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { ref, watch } from 'vue'; // <== tambahkan watch
+import { useForm, Link } from '@inertiajs/vue3';
+
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
-import { Link } from '@inertiajs/vue3';
 
 const props = defineProps({
     user: {
@@ -30,10 +30,24 @@ const form = useForm({
     profile_photo: null,
 });
 
+const usernameError = ref('');
+
+// ✅ Gunakan arrow function agar username bisa di-watch
+watch(() => form.username, (val) => {
+    if (val && !/^[a-z0-9]+$/.test(val)) {
+        usernameError.value = 'Username hanya boleh huruf kecil dan angka tanpa spasi atau simbol.';
+    } else {
+        usernameError.value = '';
+    }
+});
+
 const photoPreview = ref(null);
 
+// ✅ Jangan kirim form jika ada error
 const updateProfileInformation = () => {
-    form.post(route('profile.update'), {
+    if (usernameError.value) return;
+
+    form.patch(route('profile.update'), {
         preserveScroll: true,
         onSuccess: () => form.reset(),
     });
@@ -56,6 +70,7 @@ const updateProfilePhoto = () => {
     });
 };
 </script>
+
 
 <template>
     <section>
@@ -96,6 +111,7 @@ const updateProfilePhoto = () => {
                     required
                     autocomplete="username"
                 />
+                <p v-if="usernameError" class="text-red-500 text-sm mt-1">{{ usernameError }}</p>
                 <InputError class="mt-2" :message="form.errors.username" />
             </div>
 
