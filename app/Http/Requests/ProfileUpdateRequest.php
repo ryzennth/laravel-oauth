@@ -35,12 +35,13 @@ class ProfileUpdateRequest extends FormRequest
             Rule::unique(User::class)->ignore($this->user()->id),
         ],
         'password' => [
-            'required',
+            'nullable',
             'confirmed',
             Password::min(8)
                 ->mixedCase()   // huruf besar & kecil
                 ->letters()     // harus ada huruf
-                ->numbers(),    // harus ada angka
+                ->numbers()    // harus ada angka
+                ->symbols()    //harus ada simbol
         ],
     ];
 }
@@ -50,6 +51,13 @@ public function messages(): array
         'username.regex' => 'Username hanya boleh huruf kecil dan angka tanpa spasi atau simbol.',
         'username.unique' => 'Username sudah digunakan.',
         'email.unique' => 'Email sudah digunakan.',
+        'password.min' => 'Password minimal harus 8 karakter.',
+        'password.mixed' => 'Password harus mengandung huruf besar dan kecil.',
+        'password.letters' => 'Password harus mengandung huruf.',
+        'password.numbers' => 'Password harus mengandung angka.',
+        'password.symbols' => 'Password harus mengandung simbol (seperti !@#$%).',
+        'password.confirmed' => 'Konfirmasi password tidak cocok.',
+
     ];
 }
 

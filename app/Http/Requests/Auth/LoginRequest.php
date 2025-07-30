@@ -3,11 +3,13 @@
 namespace App\Http\Requests\Auth;
 
 use App\Models\User;
-use Illuminate\Auth\Events\Lockout;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Lockout;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
@@ -22,18 +24,30 @@ class LoginRequest extends FormRequest
         return [
             'login' => ['required', 'string'],
             'password' => [
-                'required',
-                'string',
-                'min:8',
-                'regex:/^(?=.*[a-zA-Z])(?=.*\d).+$/',
+            'required',
+            
+            Password::min(8)
+                ->mixedCase()   // huruf besar & kecil
+                ->letters()     // harus ada huruf
+                ->numbers()     // harus ada angka
+                ->symbols()    // harus ada simbol                
             ],
+            'g-recaptcha-response' => ['required', function ($attribute, $value, $fail) {
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => env('RECAPTCHA_SECRET_KEY'),
+            'response' => $value,
+        ]);
+        if (!$response->json('success')) {
+            $fail('CAPTCHA tidak valid.');
+        }
+    }],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'password.regex' => 'Password harus mengandung huruf dan angka.',
+            'password.regex' => 'Password harus mengandung lowercase, uppercase, angka, dan simbol.',
             'password.min' => 'Password minimal 8 karakter.',
         ];
     }

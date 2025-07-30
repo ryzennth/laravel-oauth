@@ -24,7 +24,8 @@ const verificationLinkSent = computed(() => props.status === 'verification-link-
         <div class="mb-4 text-sm text-gray-600">
             Terima kasih telah mendaftar! Sebelum memulai, silakan verifikasi alamat email Anda
             dengan mengklik tautan yang telah kami kirimkan. Jika Anda belum menerima email tersebut,
-            kami akan dengan senang hati mengirim ulang.
+            kami akan dengan senang hati mengirim ulang. <br>
+            Catatan: jika anda login lewat google, silahkan saat diarahkan ke halaman login kembali login menggunakan google
         </div>
 
         <div

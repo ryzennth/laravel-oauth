@@ -16,7 +16,7 @@ class SetPasswordController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'password' => ['required', 'confirmed', 'min:8'],
+            'password' => ['required', 'confirmed', 'min:8', 'm'],
         ]);
 
         $user = $request->user();

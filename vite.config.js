@@ -15,6 +15,9 @@ export default defineConfig({
                     includeAbsolute: false,
                 },
             },
-        }),
+        }),      
     ],
+    server: {
+        host: '127.0.0.1', // ← force IPv4
+    },
 });

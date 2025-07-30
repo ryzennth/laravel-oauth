@@ -21,6 +21,8 @@
     },
     "dependencies": {
         "@heroicons/vue": "^2.2.0",
-        "sweetalert2": "^11.22.2"
+        "sweetalert2": "^11.22.2",
+        "vue-recaptcha": "^3.0.0-alpha.6",
+        "vue-recaptcha-v3": "^2.0.1"
     }
 }

@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\Auth;
 
+use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Notification;
-use Tests\TestCase;
 
 class PasswordResetTest extends TestCase
 {
@@ -59,9 +61,27 @@ class PasswordResetTest extends TestCase
             $response = $this->post('/reset-password', [
                 'token' => $notification->token,
                 'email' => $user->email,
-                'password' => 'password',
+                'password' => [
+            'required',
+            'confirmed',
+            Password::min(8)
+                ->mixedCase()   // huruf besar & kecil
+                ->letters()     // harus ada huruf
+                ->numbers()     // harus ada angka
+                ->symbols()    // harus ada simbol
+        ],
+            'g-recaptcha-response' => ['required', function ($attribute, $value, $fail) {
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => env('RECAPTCHA_SECRET_KEY'),
+            'response' => $value,
+        ]);
+        if (!$response->json('success')) {
+            $fail('CAPTCHA tidak valid.');
+        }
+    }],
                 'password_confirmation' => 'password',
             ]);
+            
 
             $response
                 ->assertSessionHasNoErrors()

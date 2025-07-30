@@ -8,6 +8,8 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { onMounted } from 'vue';
+
 
 const showPassword = ref(false);
 const showPasswordConfirm = ref(false);
@@ -19,6 +21,7 @@ const form = useForm({
     email: '',
     password: '',
     password_confirmation: '',
+    'g-recaptcha-response': '',
 });
 
 // Realtime warning jika username mengandung spasi
@@ -40,6 +43,7 @@ watch(() => form.password, (val) => {
         { check: /[a-z]/.test(val), message: 'huruf kecil' },
         { check: /[A-Z]/.test(val), message: 'huruf besar' },
         { check: /[0-9]/.test(val), message: 'angka' },
+        { check: /[!@#$%^&*(),.?":{}|<>_\-\\[\]=+~`/]/.test(val), message: 'simbol' }, // simbol ditambahkan
     ];
 
     const failed = rules.filter(rule => !rule.check);
@@ -50,12 +54,44 @@ watch(() => form.password, (val) => {
     }
 });
 
-
 const submit = () => {
+    const response = grecaptcha.getResponse();
+    if (!response) {
+        alert('Silakan selesaikan CAPTCHA terlebih dahulu.');
+        return;
+    }
+
+    form['g-recaptcha-response'] = response;
+
     form.post(route('register'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
+        onFinish: () => {
+            form.reset('password', 'password_confirmation');
+            grecaptcha.reset(); // reset box
+        },
     });
 };
+
+
+onMounted(() => {
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoadCallback&render=explicit';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    // Buat callback global (biar dikenali oleh reCAPTCHA)
+    window.onRecaptchaLoadCallback = () => {
+        grecaptcha.render('recaptcha-box', {
+            sitekey: '6Lec7pIrAAAAAHcKgSfKTXdwYnUlgLlRZ2O7zN_u',
+        });
+    };
+});
+
+
+
+
+
+
 
 
 </script>
@@ -184,6 +220,11 @@ const submit = () => {
                     Register
                 </PrimaryButton>
             </div>
+            <div id="recaptcha-box" class="g-recaptcha flex justify-center" data-sitekey="6Lec7pIrAAAAAHcKgSfKTXdwYnUlgLlRZ2O7zN_u"></div>
+            <InputError class="mt-2" :message="form.errors['g-recaptcha-response']" />
         </form>
+
+
+
     </GuestLayout>
 </template>

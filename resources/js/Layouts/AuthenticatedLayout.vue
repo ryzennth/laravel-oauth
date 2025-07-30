@@ -11,6 +11,8 @@ import Swal from 'sweetalert2';
 const showingNavigationDropdown = ref(false);
 const page = usePage();
 const user = computed(() => page.props.auth?.user || {});
+const roles = computed(() => page.props.auth?.roles ?? []);
+
 
 onMounted(() => {
     const flash = page.props.flash;
@@ -26,8 +28,6 @@ onMounted(() => {
 });
 </script>
 
-
-
 <template>
     <div class="min-h-screen bg-gray-100">
         <nav class="border-b border-gray-100 bg-white">
@@ -35,26 +35,21 @@ onMounted(() => {
                 <div class="flex h-16 justify-between">
                     <!-- Logo & Navigation -->
                     <div class="flex">
-                        <!-- Logo -->
                         <div class="flex shrink-0 items-center">
                             <Link :href="route('dashboard')">
                                 <ApplicationLogo class="block h-9 w-auto fill-current text-gray-800" />
                             </Link>
                         </div>
 
-                        <!-- Navigation Links -->
                         <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                             <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                 Dashboard
                             </NavLink>
                         </div>
                     </div>
-                   
-
 
                     <!-- Right Side -->
                     <div class="hidden sm:ms-6 sm:flex sm:items-center">
-                        <!-- Settings Dropdown -->
                         <div class="relative ms-3">
                             <Dropdown align="right" width="48">
                                 <template #trigger>
@@ -65,16 +60,25 @@ onMounted(() => {
                                         >
                                             <div class="flex items-center space-x-2">
                                                 <img
-                                                    :src="photoPreview || `/storage/${user.profile_photo_path}`"
+                                                    :src="user.profile_photo_path ? `/storage/${user.profile_photo_path}` : '/default-profile.png'"
+
                                                     alt="Profile Photo"
                                                     class="h-8 w-8 rounded-full object-cover border border-gray-300"
                                                 />
                                                 <div class="text-left">
-                                                    <div>{{ user.name }}</div>
+                                                    <div class="flex items-center gap-2">
+                                                        <span>{{ user.name }}</span>
+                                                        <span
+                                                            v-for="role in roles"
+                                                            :key="role"
+                                                            class="text-[10px] uppercase bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold"
+                                                        >
+                                                            {{ role }}
+                                                        </span>
+                                                    </div>
                                                     <div class="text-xs text-gray-400">{{ user.username }}</div>
                                                 </div>
                                             </div>
-
                                             <svg
                                                 class="ml-2 h-4 w-4"
                                                 xmlns="http://www.w3.org/2000/svg"
@@ -137,7 +141,16 @@ onMounted(() => {
                 <!-- Responsive Settings -->
                 <div class="border-t border-gray-200 pb-1 pt-4">
                     <div class="px-4">
-                        <div class="text-base font-medium text-gray-800">{{ user.name }}</div>
+                        <div class="flex flex-wrap items-center gap-2 text-base font-medium text-gray-800">
+                            <span>{{ user.name }}</span>
+                            <span
+                                v-for="role in roles"
+                                :key="role"
+                                class="text-[10px] uppercase bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold"
+                            >
+                                {{ role }}
+                            </span>
+                        </div>
                         <div class="text-sm font-medium text-gray-500">{{ user.email }}</div>
                     </div>
 

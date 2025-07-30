@@ -38,12 +38,18 @@ class HandleInertiaRequests extends Middleware
                     ['has_password' => !empty($request->user()->password)]
                 )
                 : null,
+            'roles' => $request->user()
+                ? $request->user()->getRoleNames()
+                : [],
+            'permissions' => $request->user()
+                ? $request->user()->getAllPermissions()->pluck('name')
+                : [],
         ],
         'flash' => [
             'mustSetPassword' => fn () => $request->session()->get('mustSetPassword'),
+            'success' => fn () => $request->session()->get('success'),
+            'error' => fn () => $request->session()->get('error'),
         ],
     ];
 }
-
-
 }

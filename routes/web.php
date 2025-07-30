@@ -1,16 +1,17 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
-use Inertia\Inertia;
-use Laravel\Socialite\Facades\Socialite;
 use App\Models\User;
+use Inertia\Inertia;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Auth\Events\Registered;
+use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\SetPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\UserRoleController;
 
 Route::get('/', fn () => redirect('/login'));
 
@@ -22,54 +23,71 @@ Route::get('/auth/google/redirect', fn () => Socialite::driver('google')->redire
 Route::get('/auth/google/callback', function () {
     $googleUser = Socialite::driver('google')->stateless()->user();
 
-    $user = User::where('email', $googleUser->getEmail())->first();
-
-    if (! $user) {
-        // Buat user baru TANPA password
-        $user = User::create([
-            'name' => $googleUser->getName() ?? 'Google User',
+    // Simpan data sementara di session
+    session([
+        'google_oauth' => [
+            'id' => $googleUser->getId(),
+            'name' => $googleUser->getName(),
             'email' => $googleUser->getEmail(),
-            'username' => Str::slug($googleUser->getName()) . rand(100, 999),
-            'email_verified_at' => now(),
+            'avatar' => $googleUser->getAvatar(),
+            
+        ]
+    ]);
+    return redirect()->route('google.verify');
+});
+
+Route::get('/google/verify', function () {
+    if (auth()->check()) {
+        return redirect()->route('dashboard');
+    }
+
+    $oauthData = session('google_oauth');
+    if (!$oauthData) {
+        return redirect()->route('login');
+    }
+
+    return Inertia::render('Auth/GoogleVerify', [
+        'googleUser' => $oauthData,
+    ]);
+})->name('google.verify');
+
+
+Route::post('/google/confirm', function () {
+    $oauth = session('google_oauth');
+
+    if (!$oauth) return redirect()->route('login');
+
+    $user = User::where('google_id', $oauth['id'])->orWhere('email', $oauth['email'])->first();
+
+    if (!$user) {
+        $user = User::create([
+            'name' => $oauth['name'] ?? 'Google User',
+            'email' => $oauth['email'],
+            'google_id' => $oauth['id'],
+            'username' => null,
             'password' => null,
+            'email_verified_at' => now(),
         ]);
 
-        Auth::login($user);
-        return redirect()->route('profile.edit');
+        event(new Registered($user));
+    } elseif (!$user->google_id) {
+        $user->google_id = $oauth['id'];
+        $user->save();
     }
-
-    if (! $user->google_id) {
-        $user->google_id = $googleUser->getId();
-    }
-
-    if (is_null($user->email_verified_at)) {
-        $user->email_verified_at = now();
-    }
-
-    $user->save();
 
     Auth::login($user);
+    session()->forget('google_oauth');
 
-    // Redirect ke profile kalau password belum di-set
-    if (is_null($user->password)) {
-        return redirect()->route('profile.edit');
-    }
-
-    return redirect()->intended('/dashboard');
-});
+    return redirect()->route('profile.edit');
+})->name('google.confirm');
 
 // ------------------------
 // Routes yang memerlukan password (terkunci jika belum set)
 // ------------------------
 Route::middleware(['auth', 'verified', 'ensure.password'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-
-    Route::middleware(['auth', 'complete.profile'])->group(function () {
-    Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
-});
-
+    Route::middleware(['complete.profile'])->group(function () {
+        Route::get('/dashboard', fn () => Inertia::render('Dashboard'))->name('dashboard');
+    });
 
     // Profile (edit/update/hapus)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -94,6 +112,11 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])->name('password.email');
     Route::get('/reset-password/{token}', [NewPasswordController::class, 'create'])->name('password.reset');
     Route::post('/reset-password', [NewPasswordController::class, 'store'])->name('password.update');
+});
+
+Route::middleware(['auth', 'role:super admin'])->group(function () {
+    Route::get('/admin/user-roles', [UserRoleController::class, 'index'])->name('user.roles.index');
+    Route::post('/admin/user-roles/{user}/assign', [UserRoleController::class, 'assign'])->name('user.roles.assign');
 });
 
 require __DIR__.'/auth.php';

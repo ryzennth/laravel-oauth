@@ -4,11 +4,12 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { useForm, usePage } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
+import Swal from 'sweetalert2';
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/solid';
 
 const page = usePage();
-const mustSetPassword = computed(() => page.props.flash?.mustSetPassword === true);
+const mustSetPassword = computed(() => page.props.mustSetPassword === true);
 
 const passwordInput = ref(null);
 const currentPasswordInput = ref(null);
@@ -22,6 +23,39 @@ const form = useForm({
 const showCurrentPassword = ref(false);
 const showNewPassword = ref(false);
 const showConfirmPassword = ref(false);
+const passwordError = ref('');
+
+watch(() => form.password, (val) => {
+    const rules = [
+        { check: val.length >= 8, message: 'minimal 8 karakter' },
+        { check: /[a-z]/.test(val), message: 'huruf kecil' },
+        { check: /[A-Z]/.test(val), message: 'huruf besar' },
+        { check: /[0-9]/.test(val), message: 'angka' },
+        { check: /[!@#$%^&*(),.?":{}|<>_\-\\[\]=+~`/]/.test(val), message: 'simbol' }, // simbol ditambahkan
+    ];
+
+    const failed = rules.filter(rule => !rule.check);
+    if (val && failed.length > 0) {
+        passwordError.value = 'Password harus mengandung: ' + failed.map(r => r.message).join(', ');
+    } else {
+        passwordError.value = '';
+    }
+});
+
+
+// Swal muncul otomatis saat halaman dimuat
+onMounted(() => {
+    if (mustSetPassword.value) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Password Belum Diatur',
+            text: 'Silakan buat password baru untuk mengamankan akunmu.',
+            confirmButtonText: 'Isi Sekarang',
+        }).then(() => {
+            passwordInput.value?.focus();
+        });
+    }
+});
 
 const updatePassword = () => {
     form.put(route('password.update'), {
@@ -30,16 +64,28 @@ const updatePassword = () => {
         onError: () => {
             if (form.errors.password) {
                 form.reset('password', 'password_confirmation');
-                passwordInput.value.focus();
+                passwordInput.value?.focus();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Menyimpan',
+                    text: form.errors.password,
+                });
             }
+
             if (!mustSetPassword.value && form.errors.current_password) {
                 form.reset('current_password');
-                currentPasswordInput.value.focus();
+                currentPasswordInput.value?.focus();
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Password Saat Ini Salah',
+                    text: form.errors.current_password,
+                });
             }
         },
     });
 };
-
 </script>
 
 
@@ -53,6 +99,11 @@ const updatePassword = () => {
         </header>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
+            <!-- Notice for Google/OAuth users -->
+            <div v-if="mustSetPassword" class="text-sm text-yellow-600 bg-yellow-100 border border-yellow-300 p-3 rounded">
+                Kamu belum memiliki password. Silakan isi password baru untuk mengamankan akunmu.
+            </div>
+
             <!-- Current Password -->
             <div v-if="!mustSetPassword">
                 <InputLabel for="current_password" value="Current Password" />
@@ -75,7 +126,7 @@ const updatePassword = () => {
                         <component :is="showCurrentPassword ? EyeSlashIcon : EyeIcon" class="h-5 w-5" />
                     </button>
                 </div>
-
+                
                 <InputError :message="form.errors.current_password" class="mt-2" />
             </div>
 
@@ -132,7 +183,7 @@ const updatePassword = () => {
             </div>
 
             <p class="text-sm text-gray-500 mt-1">
-                Password minimal 8 karakter, dan harus mengandung huruf besar, huruf kecil, dan angka.
+                Password minimal 8 karakter, dan harus mengandung huruf besar, huruf kecil, angka, dan simbol.
             </p>
 
             <!-- Submit -->
@@ -145,9 +196,7 @@ const updatePassword = () => {
                     leave-active-class="transition ease-in-out"
                     leave-to-class="opacity-0"
                 >
-                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">
-                        Saved.
-                    </p>
+                    <p v-if="form.recentlySuccessful" class="text-sm text-gray-600">Saved.</p>
                 </Transition>
             </div>
         </form>

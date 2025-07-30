@@ -5,6 +5,8 @@ import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
 import { Head, usePage } from '@inertiajs/vue3';
 import { onMounted, watch } from 'vue';
+import { ref, computed } from 'vue';
+
 import Swal from 'sweetalert2';
 
 // Props dari backend
@@ -16,6 +18,7 @@ defineProps({
 
 // Ambil props flash dari page
 const page = usePage();
+const mustSetPassword = computed(() => page.props.mustSetPassword);
 
 // Jalankan popup kalau harus isi password (jika flash sudah tersedia saat mounted)
 onMounted(() => {

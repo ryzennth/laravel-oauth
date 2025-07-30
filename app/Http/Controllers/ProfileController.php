@@ -19,13 +19,18 @@ class ProfileController extends Controller
      * Display the user's profile form.
      */
     public function edit(Request $request): Response
-    {
-        return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
-            'status' => session('status'),
-            'user' => $request->user(),
-        ]);
-    }
+{
+    $user = $request->user();
+
+    return Inertia::render('Profile/Edit', [
+        'mustVerifyEmail' => $user instanceof MustVerifyEmail,
+        'status' => session('status'),
+        'user' => $user,
+        'mustSetPassword' => is_null($user->password),
+    ]);
+}
+
+    
 
     /**
      * Update the user's profile information.
@@ -33,16 +38,32 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
 {
     $user = $request->user();
-
     $validated = $request->validated();
 
     if ($user->isDirty('email')) {
         $user->email_verified_at = null;
     }
 
-    $user->fill($validated)->save();
+    $user->fill($validated);
+
+    if ($request->filled('password')) {
+        $user->password = bcrypt($validated['password']);
+    }
+
+    $user->save();
 
     return Redirect::route('profile.edit')->with('status', 'profile-updated');
+}
+
+
+
+    public function rules(): array
+{
+    return [
+        'name' => ['required', 'string', 'max:255'],
+        'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $this->user()->id],
+        'email' => ['required', 'email', 'max:255', 'unique:users,email,' . $this->user()->id],
+    ];
 }
 
 

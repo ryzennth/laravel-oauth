@@ -2,17 +2,18 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rules;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use Illuminate\Validation\Rules\Password as PasswordRule;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Validation\ValidationException;
 
 class NewPasswordController extends Controller
 {
@@ -40,11 +41,20 @@ class NewPasswordController extends Controller
             'password' => [
             'required',
             'confirmed',
-            Password::min(8)
+            PasswordRule::min(8)
                 ->mixedCase()   // huruf besar & kecil
                 ->letters()     // harus ada huruf
                 ->numbers(),    // harus ada angka
         ],
+        'g-recaptcha-response' => ['required', function ($attribute, $value, $fail) {
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => env('RECAPTCHA_SECRET_KEY'),
+            'response' => $value,
+        ]);
+        if (!$response->json('success')) {
+            $fail('CAPTCHA tidak valid.');
+        }
+    }],
         ]);
 
         // Here we will attempt to reset the user's password. If it is successful we

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Auth;
 
 use App\Models\User;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -42,8 +43,18 @@ public function rules(): array
             Password::min(8)
                 ->mixedCase()   // huruf besar & kecil
                 ->letters()     // harus ada huruf
-                ->numbers(),    // harus ada angka
+                ->numbers()     // harus ada angka
+                ->symbols()    // harus ada simbol
         ],
+        'g-recaptcha-response' => ['required', function ($attribute, $value, $fail) {
+        $response = Http::asForm()->post('https://www.google.com/recaptcha/api/siteverify', [
+            'secret' => env('RECAPTCHA_SECRET_KEY'),
+            'response' => $value,
+        ]);
+        if (!$response->json('success')) {
+            $fail('CAPTCHA tidak valid.');
+        }
+    }],
     ];
 }
 
@@ -55,6 +66,7 @@ public function rules(): array
         'password.mixedCase' => 'Password harus mengandung huruf besar dan kecil.',
         'password.letters' => 'Password harus mengandung huruf.',
         'password.numbers' => 'Password harus mengandung angka.',
+        'password.symbols' => 'Password harus mengandung symbol.',
     ];
 }
 
