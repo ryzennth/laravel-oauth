@@ -21,8 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'ensure.password' => \App\Http\Middleware\EnsurePasswordIsSet::class,
             'complete.profile' => \App\Http\Middleware\EnsureProfileIsCompleted::class,
-            'role' => \Spatie\Permission\Middlewares\RoleMiddleware::class,
-            'permission' => \Spatie\Permission\Middlewares\PermissionMiddleware::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
 
         ]);
     })

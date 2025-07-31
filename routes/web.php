@@ -12,6 +12,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\SetPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\UserRoleController;
+use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', fn () => redirect('/login'));
 
@@ -118,9 +119,23 @@ Route::middleware(['auth', 'role:super admin'])->group(function () {
     Route::get('/admin/user-roles', [UserRoleController::class, 'index'])->name('user.roles.index');
     Route::post('/admin/user-roles/{user}/assign', [UserRoleController::class, 'assign'])->name('user.roles.assign');
 });
-Route::middleware(['auth', 'role:super-admin'])->group(function () {
-    Route::resource('admin/users', \App\Http\Controllers\Admin\UserController::class);
+Route::middleware(['auth', 'role:super admin'])
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+        Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
+    });
+
+    Route::middleware(['auth', 'verified', 'complete.profile', 'role:super admin'])->group(function () {
+    Route::get('/admin/users/create', [UserController::class, 'create'])->name('admin.users.create');
 });
+
+Route::middleware(['auth', 'verified', 'role:super admin'])->prefix('admin')->group(function () {
+    Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
+    Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+});
+
+
 
 
 require __DIR__.'/auth.php';

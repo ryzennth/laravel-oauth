@@ -5,7 +5,7 @@ import { ref } from 'vue';
 import Swal from 'sweetalert2';
 
 const props = defineProps({
-  users: Object
+  users: Array
 });
 
 function deleteUser(id) {
@@ -18,7 +18,7 @@ function deleteUser(id) {
     confirmButtonText: 'Ya, hapus!'
   }).then((result) => {
     if (result.isConfirmed) {
-      router.delete(route('users.destroy', id));
+      router.delete(route('admin.users.destroy', id));
     }
   });
 }
@@ -65,16 +65,18 @@ function deleteUser(id) {
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
-              <tr v-for="user in users.data" :key="user.id">
+              <tr v-for="user in users" :key="user.id">
                 <td class="px-6 py-4 whitespace-nowrap">{{ user.name }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ user.username }}</td>
                 <td class="px-6 py-4 whitespace-nowrap">{{ user.email }}</td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span v-if="user.roles.length" class="inline-flex rounded bg-gray-200 px-2 py-1 text-xs">{{ user.roles[0] }}</span>
+                <td class="text-gray-800 text-sm">
+                    <span v-if="user.roles.length">{{ user.roles[0].name }}</span>
+                    <span v-else>-</span>
                 </td>
+
                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <Link
-                    :href="route('users.edit', user.id)"
+                    :href="route('admin.users.edit', user.id)"
                     class="mr-2 text-indigo-600 hover:text-indigo-900"
                   >
                     Edit

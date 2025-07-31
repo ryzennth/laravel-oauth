@@ -45,6 +45,14 @@ onMounted(() => {
                             <NavLink :href="route('dashboard')" :active="route().current('dashboard')">
                                 Dashboard
                             </NavLink>
+                            <NavLink
+                                v-if="roles.includes('super admin')"
+                                :href="route('admin.users.index')"
+                                :active="route().current('admin.users.index')"
+                            >
+                                Kelola Pengguna
+                            </NavLink>
+
                         </div>
                     </div>
 
@@ -136,6 +144,14 @@ onMounted(() => {
                     <ResponsiveNavLink :href="route('dashboard')" :active="route().current('dashboard')">
                         Dashboard
                     </ResponsiveNavLink>
+                    <ResponsiveNavLink
+                    v-if="roles.includes('super admin')"
+                    :href="route('admin.users.index')"
+                    :active="route().current('admin.users.index')"
+                >
+                    Kelola Pengguna
+                </ResponsiveNavLink>
+
                 </div>
 
                 <!-- Responsive Settings -->

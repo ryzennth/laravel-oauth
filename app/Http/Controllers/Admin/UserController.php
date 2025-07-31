@@ -34,10 +34,10 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:20', 'regex:/^[a-z0-9]+$/', Rule::unique('users', 'username')],
-            'email' => ['required', 'email', Rule::unique('users', 'email')],
-            'password' => ['required', 'string', 'min:8'],
-            'role' => ['required', 'exists:roles,name'],
+            'username' => ['required', 'string', 'max:20', 'regex:/^[a-z0-9_]+$/i', 'unique:users'],
+            'email' => ['required', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:6'],
+            'role' => ['required', Rule::exists('roles', 'name')],
         ]);
 
         $user = User::create([
@@ -49,7 +49,7 @@ class UserController extends Controller
 
         $user->assignRole($validated['role']);
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully');
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan');
     }
 
     public function edit(User $user): Response
@@ -66,25 +66,27 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:20', 'regex:/^[a-z0-9]+$/', Rule::unique('users', 'username')->ignore($user->id)],
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
-            'role' => ['required', 'exists:roles,name'],
+            'username' => ['required', 'string', 'max:20', 'regex:/^[a-z0-9_]+$/i', Rule::unique('users', 'username')->ignore($user->id)],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'password' => ['nullable', 'string', 'min:6'],
+            'role' => ['required', Rule::exists('roles', 'name')],
         ]);
 
         $user->update([
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
+            'password' => $validated['password'] ? Hash::make($validated['password']) : $user->password,
         ]);
 
         $user->syncRoles([$validated['role']]);
 
-        return redirect()->route('admin.users.index')->with('success', 'User updated successfully');
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil diperbarui');
     }
 
     public function destroy(User $user)
     {
         $user->delete();
-        return redirect()->route('admin.users.index')->with('success', 'User deleted successfully');
+        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus');
     }
 }
