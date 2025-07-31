@@ -118,5 +118,9 @@ Route::middleware(['auth', 'role:super admin'])->group(function () {
     Route::get('/admin/user-roles', [UserRoleController::class, 'index'])->name('user.roles.index');
     Route::post('/admin/user-roles/{user}/assign', [UserRoleController::class, 'assign'])->name('user.roles.assign');
 });
+Route::middleware(['auth', 'role:super-admin'])->group(function () {
+    Route::resource('admin/users', \App\Http\Controllers\Admin\UserController::class);
+});
+
 
 require __DIR__.'/auth.php';
