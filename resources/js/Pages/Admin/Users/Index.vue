@@ -39,7 +39,7 @@ function deleteUser(id) {
             href="/admin/users/create"
             class="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
           >
-            + Tambah Use
+            + Tambah User
           </Link>
         </div>
 
