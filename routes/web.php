@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\RoleController;
 use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\Support\Str;
@@ -8,11 +9,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Auth\Events\Registered;
 use Laravel\Socialite\Facades\Socialite;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\UserRoleController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\SetPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\UserRoleController;
-use App\Http\Controllers\Admin\UserController;
 
 Route::get('/', fn () => redirect('/login'));
 
@@ -133,6 +134,12 @@ Route::middleware(['auth', 'role:super admin'])
 Route::middleware(['auth', 'verified', 'role:super admin'])->prefix('admin')->group(function () {
     Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+});
+
+Route::prefix('admin')->middleware(['auth', 'role:super admin'])->group(function () {
+    Route::get('/roles', [RoleController::class, 'index'])->name('admin.roles.index');
+    Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('admin.roles.edit');
+    Route::put('/roles/{role}', [RoleController::class, 'update'])->name('admin.roles.update');
 });
 
 

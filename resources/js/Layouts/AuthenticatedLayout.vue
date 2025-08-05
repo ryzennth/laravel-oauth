@@ -52,6 +52,15 @@ onMounted(() => {
                             >
                                 Kelola Pengguna
                             </NavLink>
+                            <NavLink
+                                v-if="roles.includes('super admin')"
+                                :href="route('admin.roles.index')"
+                                :active="route().current('admin.roles.index')"
+                            >
+                                Kelola Role & Permission
+                            </NavLink>
+
+
 
                         </div>
                     </div>
@@ -151,6 +160,15 @@ onMounted(() => {
                 >
                     Kelola Pengguna
                 </ResponsiveNavLink>
+                <ResponsiveNavLink
+                    v-if="roles.includes('super admin')"
+                    :href="route('admin.roles.index')"
+                    :active="route().current('admin.roles.index')"
+                >
+                    Kelola Role & Permission
+                </ResponsiveNavLink>
+
+
 
                 </div>
 
