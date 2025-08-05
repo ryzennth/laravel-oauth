@@ -53,32 +53,43 @@ class LoginRequest extends FormRequest
     }
 
     public function authenticate(): void
-    {
-        $this->ensureIsNotRateLimited();
+{
+    $this->ensureIsNotRateLimited();
 
-        $login = $this->input('login');
-        $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+    $login = $this->input('login');
+    $field = filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-        // Cek user terlebih dahulu
-        $user = User::where($field, $login)->first();
+    // Cek user terlebih dahulu
+    $user = User::where($field, $login)->first();
 
-        if ($user && $user->google_id && is_null($user->password)) {
-            throw ValidationException::withMessages([
-                'login' => 'Akun ini terdaftar melalui Google. Silakan login dengan Google.',
-            ]);
-        }
-
-        // Coba autentikasi
-        if (! Auth::attempt([$field => $login, 'password' => $this->input('password')], $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
-
-            throw ValidationException::withMessages([
-                'login' => trans('auth.failed'),
-            ]);
-        }
-
-        RateLimiter::clear($this->throttleKey());
+    if ($user && $user->google_id && is_null($user->password)) {
+        throw ValidationException::withMessages([
+            'login' => 'Akun ini terdaftar melalui Google. Silakan login dengan Google.',
+        ]);
     }
+
+    // ✅ Tambahkan pengecekan akun aktif/tidak
+    if ($user && !$user->is_active) {
+        // Flag buat SweetAlert di front-end
+        session()->flash('account_deactivated', true);
+
+        throw ValidationException::withMessages([
+            'login' => 'Akun Anda telah dinonaktifkan.',
+        ]);
+    }
+
+    // Coba autentikasi
+    if (! Auth::attempt([$field => $login, 'password' => $this->input('password')], $this->boolean('remember'))) {
+        RateLimiter::hit($this->throttleKey());
+
+        throw ValidationException::withMessages([
+            'login' => trans('auth.failed'),
+        ]);
+    }
+
+    RateLimiter::clear($this->throttleKey());
+}
+
 
     public function ensureIsNotRateLimited(): void
     {

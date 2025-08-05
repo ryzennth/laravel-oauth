@@ -24,9 +24,8 @@ class UserController extends Controller
 
     public function create(): Response
     {
-        $roles = Role::pluck('name');
         return Inertia::render('Admin/Users/Create', [
-            'roles' => $roles,
+            'roles' => Role::all(), // 🔁 ambil semua role lengkap (id + name)
         ]);
     }
 
@@ -37,7 +36,7 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:20', 'regex:/^[a-z0-9_]+$/i', 'unique:users'],
             'email' => ['required', 'email', 'max:255', 'unique:users'],
             'password' => ['required', 'string', 'min:6'],
-            'role' => ['required', Rule::exists('roles', 'name')],
+            'role' => ['required', Rule::exists('roles', 'id')],
         ]);
 
         $user = User::create([
@@ -45,6 +44,7 @@ class UserController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'is_active' => true, // 🆕 default aktif saat dibuat
         ]);
 
         $user->assignRole($validated['role']);
@@ -54,11 +54,9 @@ class UserController extends Controller
 
     public function edit(User $user): Response
     {
-        $roles = Role::pluck('name');
-
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user->load('roles'),
-            'roles' => $roles,
+            'roles' => Role::all(),
         ]);
     }
 
@@ -69,7 +67,8 @@ class UserController extends Controller
             'username' => ['required', 'string', 'max:20', 'regex:/^[a-z0-9_]+$/i', Rule::unique('users', 'username')->ignore($user->id)],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:6'],
-            'role' => ['required', Rule::exists('roles', 'name')],
+            'role' => ['required', Rule::exists('roles', 'id')],
+            'is_active' => ['required', 'boolean'],
         ]);
 
         $user->update([
@@ -77,6 +76,7 @@ class UserController extends Controller
             'username' => $validated['username'],
             'email' => $validated['email'],
             'password' => $validated['password'] ? Hash::make($validated['password']) : $user->password,
+            'is_active' => $validated['is_active'],
         ]);
 
         $user->syncRoles([$validated['role']]);

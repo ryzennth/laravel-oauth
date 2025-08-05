@@ -66,6 +66,26 @@ onMounted(() => {
     };
 });
 
+defineProps({
+  errors: Object,
+  flash: Object,
+})
+
+watch(() => flash.account_deactivated, (val) => {
+  if (val) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Akun Dinonaktifkan',
+      text: 'Akun Anda telah dinonaktifkan oleh admin.',
+    }).then(() => {
+      // Logout paksa user
+      router.visit('/logout', { method: 'post' })
+    })
+  }
+})
+
+
+
 </script>
 
 

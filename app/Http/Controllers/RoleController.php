@@ -35,4 +35,13 @@ class RoleController extends Controller
 
         return redirect()->route('admin.roles.index')->with('success', 'Permissions updated');
     }
+
+    public function toggleActive(Request $request, User $user)
+    {
+    $user->is_active = $request->is_active;
+    $user->save();
+
+    return response()->json(['success' => true]);
+    }
+
 }

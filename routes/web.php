@@ -134,6 +134,10 @@ Route::middleware(['auth', 'role:super admin'])
 Route::middleware(['auth', 'verified', 'role:super admin'])->prefix('admin')->group(function () {
     Route::get('/users/create', [UserController::class, 'create'])->name('admin.users.create');
     Route::post('/users', [UserController::class, 'store'])->name('admin.users.store');
+    Route::put('/admin/users/{user}', [UserController::class, 'update'])->name('admin.users.update');
+    Route::put('/admin/users/{user}/toggle-active', [UserController::class, 'toggleActive']);
+
+
 });
 
 Route::prefix('admin')->middleware(['auth', 'role:super admin'])->group(function () {

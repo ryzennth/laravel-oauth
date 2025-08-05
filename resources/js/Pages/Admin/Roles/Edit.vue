@@ -2,10 +2,10 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { useForm } from '@inertiajs/vue3';
 
-const props = defineProps({ role: Object, permissions: Array });
+const {role, permission} = defineProps ({ role: Object, permissions: Array });
 
 const form = useForm({
-  permissions: props.role.permissions.map(p => p.id),
+  permissions: role.permissions.map(p => p.id),
 });
 
 function submit() {
@@ -17,7 +17,7 @@ function submit() {
   <AuthenticatedLayout>
     <template #header>
       <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-        Edit Permissions: {{ props.role.name }}
+        Edit Permissions: {{ role.name }}
       </h2>
     </template>
 
