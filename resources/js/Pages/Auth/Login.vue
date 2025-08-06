@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch,onMounted } from 'vue'
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
 import InputError from '@/Components/InputError.vue'
@@ -7,7 +7,6 @@ import InputLabel from '@/Components/InputLabel.vue'
 import PrimaryButton from '@/Components/PrimaryButton.vue'
 import TextInput from '@/Components/TextInput.vue'
 import Checkbox from '@/Components/Checkbox.vue'
-import { onMounted } from 'vue';
 
 // Heroicons
 import { EyeIcon, EyeSlashIcon } from '@heroicons/vue/24/solid'
@@ -66,12 +65,7 @@ onMounted(() => {
     };
 });
 
-defineProps({
-  errors: Object,
-  flash: Object,
-})
-
-watch(() => flash.account_deactivated, (val) => {
+watch(() => page.props.flash?.account_deactivated, (val) => {
   if (val) {
     Swal.fire({
       icon: 'error',

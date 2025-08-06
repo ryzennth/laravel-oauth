@@ -12,7 +12,11 @@ const form = useForm({
   username: '',
   email: '',
   password: '',
-  role: 'user',
+  role: '',
+})
+
+defineProps({
+  roles: Array
 })
 
 // Error refs untuk validasi real-time
@@ -57,18 +61,18 @@ const validationErrors = computed(() => {
     errors.username = 'Username minimal 3 karakter.'
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(form.email)) {
-    errors.email = 'Email tidak valid.'
-  }
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+if (form.email && !emailRegex.test(form.email)) {
+  errors.email = 'Email tidak valid.'
+}
 
   if (form.password.length < 8) {
     errors.password = 'Password minimal 8 karakter.'
   }
 
-  if (!['user', 'admin', 'super_admin'].includes(form.role)) {
-    errors.role = 'Role tidak valid.'
-  }
+  if (!form.role) {
+  errors.role = 'Role harus dipilih.'
+}
 
   return errors
 })
@@ -122,10 +126,11 @@ const submit = () => {
 
         <div>
           <InputLabel for="role" value="Role" />
-          <select id="role" v-model="form.role" class="mt-1 block w-full rounded border-gray-300">
-            <option value="user">User</option>
-            <option value="admin">Admin</option>
-            <option value="super_admin">Super Admin</option>
+          <select id="role" v-model="form.role" class="mt-1 block w-full rounded border-gray-300" required>
+            <option value="" disabled>Pilih Role</option>
+            <option v-for="role in roles" :key="role.id" :value="role.id">
+              {{ role.name }}
+            </option>
           </select>
           <InputError :message="form.errors.role || validationErrors.role" class="mt-2" />
         </div>

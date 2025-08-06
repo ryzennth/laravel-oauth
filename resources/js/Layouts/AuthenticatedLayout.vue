@@ -59,6 +59,26 @@ onMounted(() => {
                             >
                                 Kelola Role & Permission
                             </NavLink>
+                            <NavLink 
+                            v-if="roles.includes('penulis')"
+                            :href="route('articles.create')" :active="route().current('articles.create')">
+                            Tulis Artikel
+                            </NavLink>
+                            <NavLink
+                            v-if="roles.includes('super admin')"
+                            :href="route('admin.permissions.index')" :active="route().current('admin.permissions.index')">
+                            Permissions
+                            </NavLink>
+                            <NavLink
+                            v-if="roles.includes('admin')"
+                            :href="route('admin.articles.index')"
+                            :active="route().current('admin.articles.index')"
+                            >
+                            Approve Artikel
+                            </NavLink>
+
+
+
 
 
 
@@ -167,6 +187,23 @@ onMounted(() => {
                 >
                     Kelola Role & Permission
                 </ResponsiveNavLink>
+                                            <ResponsiveNavLink 
+                            v-if="roles.includes('penulis')"
+                            :href="route('articles.create')" :active="route().current('articles.create')">
+                            Tulis Artikel
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                            v-if="roles.includes('super admin')"
+                            :href="route('admin.permissions.index')" :active="route().current('admin.permissions.index')">
+                            Permissions
+                            </ResponsiveNavLink>
+                            <ResponsiveNavLink
+                            v-if="roles.includes('admin')"
+                            :href="route('admin.articles.index')"
+                            :active="route().current('admin.articles.index')"
+                            >
+                            Approve Artikel
+                            </ResponsiveNavLink>
 
 
 

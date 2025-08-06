@@ -56,7 +56,7 @@ class UserController extends Controller
     {
         return Inertia::render('Admin/Users/Edit', [
             'user' => $user->load('roles'),
-            'roles' => Role::all(),
+            'roles' => \Spatie\Permission\Models\Role::all(),
         ]);
     }
 
