@@ -24,9 +24,18 @@ class ArticleModerationController extends Controller
         return back()->with('success', 'Artikel disetujui.');
     }
 
-    public function reject(Article $article)
-    {
-        $article->update(['status' => 'rejected']);
-        return back()->with('success', 'Artikel ditolak.');
-    }
+public function reject(Request $request, Article $article)
+{
+    $request->validate([
+        'reason' => 'required|string|max:500',
+    ]);
+
+    $article->update([
+        'status' => 'rejected',
+        'reject_reason' => $request->reason,
+    ]);
+
+    return back()->with('success', 'Artikel ditolak dengan alasan.');
+}
+
 }

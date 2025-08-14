@@ -1,77 +1,74 @@
 <script setup>
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import { Head, router } from '@inertiajs/vue3'
 import Swal from 'sweetalert2'
-import { ref } from 'vue'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 
 const props = defineProps({
-  articles: Array,
+    articles: Object
 })
 
 const approve = (id) => {
-  Swal.fire({
-    title: 'Setujui artikel ini?',
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Setujui',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      router.put(route('admin.articles.approve', id))
-    }
-  })
+    Swal.fire({
+        title: 'Setujui Artikel?',
+        text: 'Artikel akan disetujui dan siap dipublikasikan.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Ya, Setujui',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.patch(route('admin.articles.approve', id))
+        }
+    })
 }
 
 const reject = (id) => {
-  Swal.fire({
-    title: 'Tolak artikel ini?',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Tolak',
-  }).then((result) => {
-    if (result.isConfirmed) {
-      router.put(route('admin.articles.reject', id))
-    }
-  })
+    Swal.fire({
+        title: 'Tolak Artikel',
+        input: 'textarea',
+        inputLabel: 'Alasan Penolakan',
+        inputPlaceholder: 'Tuliskan alasan kenapa artikel ditolak...',
+        showCancelButton: true,
+        confirmButtonText: 'Tolak',
+        cancelButtonText: 'Batal',
+        inputValidator: (value) => {
+            if (!value) return 'Alasan wajib diisi!'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            router.patch(route('admin.articles.reject', id), { reason: result.value })
+        }
+    })
 }
 </script>
 
 <template>
   <AuthenticatedLayout>
     <Head title="Review Artikel" />
+    <div class="p-6">
+        <h1 class="text-xl font-bold mb-4">Review Artikel</h1>
 
-    <div class="max-w-5xl mx-auto mt-10">
-      <h1 class="text-2xl font-bold mb-6">Artikel Menunggu Persetujuan</h1>
-
-      <div v-if="articles.length === 0" class="text-gray-500">
-        Tidak ada artikel pending.
-      </div>
-
-      <div v-else class="space-y-6">
-        <div
-          v-for="article in articles"
-          :key="article.id"
-          class="border rounded p-4 shadow-sm bg-white"
-        >
-          <h2 class="text-xl font-semibold">{{ article.title }}</h2>
-          <p class="text-gray-600 mb-2">oleh {{ article.user.name }}</p>
-          <p class="mb-4">{{ article.body }}</p>
-
-          <div class="flex gap-4">
-            <button
-              class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-              @click="approve(article.id)"
-            >
-              Setujui
-            </button>
-            <button
-              class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
-              @click="reject(article.id)"
-            >
-              Tolak
-            </button>
-          </div>
-        </div>
-      </div>
+        <table class="w-full border-collapse border">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border p-2">Judul</th>
+                    <th class="border p-2">Penulis</th>
+                    <th class="border p-2">Status</th>
+                    <th class="border p-2">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="a in articles.data" :key="a.id">
+                    <td class="border p-2">{{ a.title }}</td>
+                    <td class="border p-2">{{ a.user.name }}</td>
+                    <td class="border p-2 capitalize">{{ a.status }}</td>
+                    <td class="border p-2 space-x-2">
+                        <button @click="approve(a.id)" class="text-green-600">Approve</button>
+                        <button @click="reject(a.id)" class="text-red-600">Reject</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
   </AuthenticatedLayout>
 </template>

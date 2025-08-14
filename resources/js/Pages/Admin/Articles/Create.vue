@@ -1,15 +1,25 @@
 <script setup>
-import { ref } from 'vue'
-import { router } from '@inertiajs/vue3'
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
+import { ref, watch } from 'vue'
 import { Head, useForm } from '@inertiajs/vue3'
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'
 import Swal from 'sweetalert2'
+import { QuillEditor } from '@vueup/vue-quill'
+import '@vueup/vue-quill/dist/vue-quill.snow.css'
+
 
 const form = useForm({
   title: '',
   body: '',
 })
 
+const editorContent = ref('')
+
+// Sinkronkan Quill editor ke form.body
+watch(editorContent, (val) => {
+  form.body = val
+})
+
+// Handler submit
 const submit = () => {
   form.post(route('articles.store'), {
     onSuccess: () => {
@@ -19,9 +29,42 @@ const submit = () => {
         text: 'Artikel berhasil dikirim dan menunggu persetujuan admin.',
       })
       form.reset()
+      editorContent.value = ''
     },
   })
 }
+
+// Custom handler untuk upload gambar di Quill
+function imageHandler() {
+  const input = document.createElement('input')
+  input.setAttribute('type', 'file')
+  input.setAttribute('accept', 'image/*')
+  input.click()
+
+  input.onchange = async () => {
+    const file = input.files[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('image', file)
+
+    const res = await fetch(route('upload.image'), {
+      method: 'POST',
+      headers: {
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+      },
+      body: formData
+    })
+
+    const data = await res.json()
+    if (data.url) {
+      const range = quillRef.value.getEditor().getSelection()
+      quillRef.value.getEditor().insertEmbed(range.index, 'image', data.url)
+    }
+  }
+}
+
+const quillRef = ref(null)
 </script>
 
 <template>
@@ -40,7 +83,15 @@ const submit = () => {
 
         <div>
           <label class="block mb-1 font-semibold">Isi</label>
-          <textarea v-model="form.body" rows="8" class="w-full border rounded p-2"></textarea>
+          <QuillEditor
+            ref="quillEditor"
+            v-model:content="editorContent"
+            content-type="html"
+            theme="snow"
+            toolbar="full"
+            :modules="modules"
+            style="min-height: 200px"
+          />
           <div v-if="form.errors.body" class="text-red-500 text-sm">{{ form.errors.body }}</div>
         </div>
 

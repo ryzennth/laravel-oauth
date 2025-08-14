@@ -107,15 +107,29 @@ Route::prefix('admin')->middleware(['auth', 'role:super admin'])->name('admin.')
 
 // Penulis routes
 Route::middleware(['auth', 'role:penulis'])->group(function () {
-    Route::get('/articles/create', [ArticleController::class, 'create'])->name('articles.index');
+    Route::get('/articles/create/write', [ArticleController::class, 'create'])->name('articles.create');
     Route::post('/articles', [ArticleController::class, 'store'])->name('articles.store');
 });
 
-// Admin routes (moderasi artikel)
-Route::prefix('admin')->middleware(['auth', 'role:admin'])->name('admin.')->group(function () {
-    Route::get('/articles', [ArticleModerationController::class, 'index'])->name('articles.index');
-    Route::put('/articles/{article}/approve', [ArticleModerationController::class, 'approve'])->name('articles.approve');
-    Route::put('/articles/{article}/reject', [ArticleModerationController::class, 'reject'])->name('articles.reject');
+
+Route::post('/upload-image', [\App\Http\Controllers\UploadController::class, 'store'])->name('upload.image');
+
+// routes/web.php
+Route::middleware(['auth', 'role:penulis'])->group(function () {
+    // Penulis
+    Route::get('/author/articles', [ArticleController::class, 'listPenulis'])->name('author.articles.index');
+    Route::patch('/author/articles/{article}/resubmit', [ArticleController::class, 'resubmit'])->name('author.articles.resubmit');
+    Route::get('/author/articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
+    Route::put('/author/articles/{article}', [ArticleController::class, 'update'])->name('author.articles.update');
+
 });
+    // Admin
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/articles', [ArticleController::class, 'listAdmin'])->name('admin.articles.index');
+        Route::patch('/admin/articles/{article}/approve', [ArticleModerationController::class, 'approve'])->name('admin.articles.approve');
+        Route::patch('/admin/articles/{article}/reject', [ArticleModerationController::class, 'reject'])->name('admin.articles.reject');
+    });
+
+
 
 require __DIR__.'/auth.php';

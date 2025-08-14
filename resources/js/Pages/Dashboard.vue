@@ -24,8 +24,7 @@ defineProps({
         <p class="text-sm text-gray-500">
           Ditulis oleh: {{ article.user?.name ?? 'Anonim' }}
         </p>
-        <p class="mt-2 line-clamp-3 text-gray-700">
-          {{ article.body }}
+        <p class="mt-2 line-clamp-3 text-gray-700" v-html="article.body">
         </p>
         <a
           :href="route('articles.show', article.id)"
