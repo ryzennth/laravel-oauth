@@ -16,23 +16,29 @@ defineProps({
     <h2 class="text-xl font-semibold">Artikel Terbaru</h2>
     <div class="grid gap-4 md:grid-cols-2">
       <div
-        v-for="article in articles"
-        :key="article.id"
-        class="p-4 bg-white rounded-xl shadow"
-      >
-        <h3 class="text-lg font-bold">{{ article.title }}</h3>
-        <p class="text-sm text-gray-500">
-          Ditulis oleh: {{ article.user?.name ?? 'Anonim' }}
-        </p>
-        <p class="mt-2 line-clamp-3 text-gray-700" v-html="article.body">
-        </p>
-        <a
-          :href="route('articles.show', article.id)"
-          class="mt-3 inline-block text-indigo-600 hover:underline text-sm"
-        >
-          Baca Selengkapnya →
-        </a>
-      </div>
+  v-for="article in articles"
+  :key="article.id"
+  class="p-4 bg-white rounded-xl shadow overflow-hidden"
+>
+  <img 
+    v-if="article.cover_image" 
+    :src="`/storage/${article.cover_image}`" 
+    alt="Cover Image" 
+    class="w-full h-60 object-cover rounded-lg mb-3"
+  />
+
+  <h3 class="text-lg font-bold">{{ article.title }}</h3>
+  <p class="text-sm text-gray-500">
+    Ditulis oleh: {{ article.user?.name ?? 'Anonim' }}
+  </p>
+  <p class="mt-2 line-clamp-3 text-gray-700" v-html="article.body"></p>
+  <a
+    :href="route('articles.show', article.id)"
+    class="mt-3 inline-block text-indigo-600 hover:underline text-sm"
+  >
+    Baca Selengkapnya →
+  </a>
+</div>
     </div>
   </div>
         </template>

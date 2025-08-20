@@ -10,8 +10,10 @@ const props = defineProps({
 })
 
 const form = useForm({
+  _method: 'put',
   title: props.article.title,
   body: props.article.body,
+  cover_image: null,
 })
 
 const editor = ref(null)
@@ -49,8 +51,16 @@ onMounted(() => {
 
 // submit edit
 function submit() {
-  form.put(route('author.articles.update', props.article.id))
+  form.post(route('author.articles.update', props.article.id), {
+    forceFormData: true,
+    preserveScroll: true,
+    onSuccess: () => {
+      // reset error biar gak nyangkut
+      form.clearErrors()
+    }
+  })
 }
+
 </script>
 
 <template>
@@ -70,6 +80,19 @@ function submit() {
 
             <!-- Title -->
             <div>
+              <div v-if="props.article.cover_image" class="mb-4">
+                <img :src="`/storage/${props.article.cover_image}`" alt="Cover Image" class="w-64 rounded-lg shadow">
+              </div>
+              
+              <input 
+              type="file" 
+              @change="e => form.cover_image = e.target.files[0]" 
+              class="block w-full text-sm text-gray-700 dark:text-gray-300"
+              />
+              <div v-if="form.errors.cover_image" class="text-red-500 text-sm mt-1">
+                {{ form.errors.cover_image }}
+              </div>
+              
               <label class="block text-sm font-medium text-gray-700 mb-1">
                 Judul Artikel
               </label>

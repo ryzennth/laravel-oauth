@@ -10,31 +10,42 @@ use Illuminate\Support\Facades\Auth;
 class ArticleController extends Controller
 {
         public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'body' => 'required|string',
-        ]);
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'body' => 'required|string',
+        'cover_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+    ]);
 
-        Article::create([
-            'user_id' => Auth::id(),    
-            'title' => $request->title,
-            'body' => $request->body,
-            'status' => 'pending', // auto pending
-        ]);
-
-        return redirect()->back()->with('success', 'Artikel berhasil dikirim untuk ditinjau admin.');
+    if ($request->hasFile('cover_image')) {
+        $validated['cover_image'] = $request->file('cover_image')->store('covers', 'public');
     }
+
+    Article::create([
+        'user_id' => Auth::id(),    
+        'title' => $validated['title'],
+        'body' => $validated['body'],
+        'cover_image' => $validated['cover_image'] ?? null,
+        'status' => 'pending',
+    ]);
+
+    return redirect()->back()->with('success', 'Artikel berhasil dikirim untuk ditinjau admin.');
+}
+
+
 
     public function create()
 {
     return Inertia::render("Admin/Articles/Create",[
 
-    ]); // Pastikan file Vue-nya ada ya
+    ]);
 }
 
 public function show(Article $article)
 {
+
+    $articles = Article::with('user')->latest()->get()->append('cover_image_url');
+
     abort_unless($article->status === 'published', 403);
 
     return Inertia::render('Articles/Show', [
@@ -44,6 +55,8 @@ public function show(Article $article)
 
     public function index()
     {
+        $articles = Article::with('user')->latest()->get()->append('cover_image_url');
+
         return Inertia::render('Articles/Index');
     }
     
@@ -73,20 +86,34 @@ public function update(Request $request, Article $article)
     abort_if($article->user_id !== auth()->id(), 403);
     abort_if($article->status === 'published', 403);
 
-    $request->validate([
+    $validated = $request->validate([
         'title' => 'required|string|max:255',
         'body' => 'required|string',
+        'cover_image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
     ]);
+
+    if ($request->hasFile('cover_image')) {
+        // hapus cover lama kalau ada
+        if ($article->cover_image && \Storage::disk('public')->exists($article->cover_image)) {
+            \Storage::disk('public')->delete($article->cover_image);
+        }
+
+        $validated['cover_image'] = $request->file('cover_image')->store('covers', 'public');
+    }
 
     $article->update([
-        'title' => $request->title,
-        'body' => $request->body,
-        'status' => 'pending', // kalau di-edit, balik pending lagi
-        'rejection_reason' => null
+        'title' => $validated['title'],
+        'body' => $validated['body'],
+        'cover_image' => $validated['cover_image'] ?? $article->cover_image,
+        'status' => 'pending',
+        'reject_reason' => null
     ]);
 
-    return redirect()->route('author.articles.index')->with('success', 'Artikel berhasil diperbarui.');
+    return redirect()->route('author.articles.index')
+        ->with('success', 'Artikel berhasil diperbarui.');
 }
+
+
 
     // 🔹 PENULIS – resubmit artikel rejected
     public function resubmit(Article $article)
@@ -142,5 +169,24 @@ public function update(Request $request, Article $article)
 
         return back()->with('success', 'Artikel ditolak.');
     }
+
+    public function destroy(Article $article)
+{
+    // pastikan hanya pemilik artikel yang bisa hapus
+    if ($article->user_id !== auth()->id()) {
+        abort(403, 'Unauthorized action.');
+    }
+
+    // hapus cover image kalau ada
+    if ($article->cover_image && \Storage::disk('public')->exists($article->cover_image)) {
+        \Storage::disk('public')->delete($article->cover_image);
+    }
+
+    $article->delete();
+
+    return redirect()->route('author.articles.index')
+        ->with('success', 'Artikel berhasil dihapus.');
+}
+
 
     }

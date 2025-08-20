@@ -121,6 +121,8 @@ Route::middleware(['auth', 'role:penulis'])->group(function () {
     Route::patch('/author/articles/{article}/resubmit', [ArticleController::class, 'resubmit'])->name('author.articles.resubmit');
     Route::get('/author/articles/{article}/edit', [ArticleController::class, 'edit'])->name('articles.edit');
     Route::put('/author/articles/{article}', [ArticleController::class, 'update'])->name('author.articles.update');
+    Route::delete('/articles/{article}', [ArticleController::class, 'destroy'])->name('author.articles.destroy');
+
 
 });
     // Admin

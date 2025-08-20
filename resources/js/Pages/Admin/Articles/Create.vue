@@ -6,10 +6,11 @@ import Swal from 'sweetalert2'
 import { QuillEditor } from '@vueup/vue-quill'
 import '@vueup/vue-quill/dist/vue-quill.snow.css'
 
-
+// form wajib ada cover_image
 const form = useForm({
   title: '',
   body: '',
+  cover_image: null, // tambahin field ini
 })
 
 const editorContent = ref('')
@@ -22,6 +23,7 @@ watch(editorContent, (val) => {
 // Handler submit
 const submit = () => {
   form.post(route('articles.store'), {
+    forceFormData: true, // biar file ikut ke FormData
     onSuccess: () => {
       Swal.fire({
         icon: 'success',
@@ -81,15 +83,27 @@ const quillRef = ref(null)
           <div v-if="form.errors.title" class="text-red-500 text-sm">{{ form.errors.title }}</div>
         </div>
 
+        <!-- Cover Image -->
+        <div>
+          <label class="block mb-1 font-semibold">Cover Image</label>
+          <input 
+            type="file" 
+            @change="e => form.cover_image = e.target.files[0]" 
+            class="block w-full text-sm text-gray-700"
+          />
+          <div v-if="form.errors.cover_image" class="text-red-500 text-sm mt-1">
+            {{ form.errors.cover_image }}
+          </div>
+        </div>
+
         <div>
           <label class="block mb-1 font-semibold">Isi</label>
           <QuillEditor
-            ref="quillEditor"
+            ref="quillRef"
             v-model:content="editorContent"
             content-type="html"
             theme="snow"
             toolbar="full"
-            :modules="modules"
             style="min-height: 200px"
           />
           <div v-if="form.errors.body" class="text-red-500 text-sm">{{ form.errors.body }}</div>

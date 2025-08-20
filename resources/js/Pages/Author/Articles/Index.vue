@@ -32,7 +32,7 @@ const deleteArticle = (id) => {
         cancelButtonText: 'Batal'
     }).then((result) => {
         if (result.isConfirmed) {
-            router.delete(route('articles.destroy', id))
+            router.delete(route('author.articles.destroy', id))
         }
     })
 }
