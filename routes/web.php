@@ -19,8 +19,13 @@ use App\Http\Controllers\Auth\SetPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Admin\ArticleModerationController;
 
-// Redirect root to login
-Route::get('/', fn () => redirect('/login'));
+
+Route::get('/', function () {
+    $articles = Article::with('user')->latest()->take(5)->get();
+    return Inertia::render('Welcome', [
+        'articles' => $articles
+    ]);
+})->name('welcome');
 
 // Authenticated & verified user routes
 Route::middleware(['auth', 'verified', 'ensure.password', 'complete.profile'])->group(function () {
